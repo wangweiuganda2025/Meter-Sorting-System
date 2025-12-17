@@ -1586,7 +1586,7 @@
             queryCounter.innerHTML = `<i class="fas fa-history"></i> Queries: ${queryCount}`;
         }
 
-        // Export History to Excel - 移除序列号相关字段
+        // Export History to Excel - 恢复历史序列号字段
         exportHistoryBtn.addEventListener('click', () => {
             if (queryHistory.length === 0) {
                 showNotification('No history to export', 'error');
@@ -1599,16 +1599,18 @@
             showNotification('Exporting history... Please wait', 'info');
             
             try {
-                // Prepare detailed export data - 移除序列号字段
+                // Prepare detailed export data - 恢复History Serial No.字段
                 const exportData = [];
                 
-                queryHistory.forEach(item => {
+                queryHistory.forEach((item, historyIndex) => {
                     const date = new Date(item.timestamp);
+                    const historySerial = historyIndex + 1; // 历史记录序列号
                     
                     if (item.resultCount > 0) {
                         // Add one row per result with full details
                         item.results.forEach((record, index) => {
                             exportData.push({
+                                'History Serial No.': historySerial,
                                 'Query ID': item.id,
                                 'Meter Number': item.meterNumber,
                                 'Scheme Name': record['Scheme Name'] || record[Object.keys(record).find(key => key.toLowerCase() === 'scheme name')] || '-',
@@ -1623,6 +1625,7 @@
                     } else {
                         // Add row for no results
                         exportData.push({
+                            'History Serial No.': historySerial,
                             'Query ID': item.id,
                             'Meter Number': item.meterNumber,
                             'Scheme Name': '-',
