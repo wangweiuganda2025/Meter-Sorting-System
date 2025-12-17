@@ -3,448 +3,1709 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meter Sorting System - Fully Automatic</title>
+    <title>KPLC Smart Meter Sorting System</title>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- 引入Font Awesome图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
-        body { background: #f5f7fa; padding: 20px; max-width: 1200px; margin: 0 auto; }
-        .section { background: white; padding: 24px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 24px; }
-        h1 { font-size: 24px; color: #2d3748; border-bottom: 2px solid #3182ce; padding-bottom: 8px; margin-bottom: 16px; }
-        h2 { font-size: 18px; color: #3182ce; margin-bottom: 16px; }
-        
-        /* 上传区域 */
-        .upload-wrap { border: 2px dashed #cbd5e0; border-radius: 6px; padding: 40px 20px; text-align: center; cursor: pointer; margin: 16px 0; }
-        .upload-wrap:hover { border-color: #3182ce; }
-        #file-input { display: none; }
-        .upload-btn { background: #3182ce; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin-top: 10px; }
-        
-        /* 按钮 & 输入框 */
-        .btn { background: #3182ce; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin: 5px; }
-        .btn-danger { background: #e53e3e; }
-        .btn-success { background: #38a169; }
-        input[type="text"] { width: 100%; max-width: 400px; padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px; margin: 10px 0; }
-        
-        /* 提示框 & 结果 */
-        .alert { padding: 12px; border-radius: 6px; margin: 16px 0; display: none; }
-        .alert-success { background: #f0fff4; color: #22543d; border: 1px solid #c6f6d5; }
-        .alert-error { background: #fff5f5; color: #742a2a; border: 1px solid #fed7d7; }
-        .alert-info { background: #ebf8ff; color: #2c5282; border: 1px solid #bee3f8; }
-        .result-card { background: #f7fafc; padding: 16px; border-radius: 6px; border-left: 4px solid #3182ce; margin: 16px 0; display: none; }
-        .result-row { margin: 8px 0; }
-        .result-label { display: inline-block; width: 140px; font-weight: 500; }
-        
-        /* 表格 & 调试 */
-        table { width: 100%; border-collapse: collapse; margin: 16px 0; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
-        th { background: #f7fafc; }
-        .debug-panel { background: #f7fafc; padding: 12px; border-radius: 6px; margin: 16px 0; font-size: 12px; color: #64748b; max-height: 300px; overflow-y: auto; }
+        :root {
+            --primary-color: #2c3e50;
+            --primary-light: #34495e;
+            --secondary-color: #3498db;
+            --secondary-light: #4fa3e0;
+            --secondary-dark: #2980b9;
+            --accent-color: #2ecc71;
+            --accent-light: #4ade80;
+            --accent-dark: #27ae60;
+            --warning-color: #e74c3c;
+            --warning-light: #ec7063;
+            --warning-dark: #c0392b;
+            --light-color: #ecf0f1;
+            --light-gray: #f8f9fa;
+            --medium-gray: #e9ecef;
+            --dark-gray: #6c757d;
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+            --shadow-hover: 0 8px 20px rgba(0, 0, 0, 0.12);
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --radius-full: 50px;
+            --modal-overlay: rgba(0, 0, 0, 0.7);
+            --transition-fast: 0.2s ease;
+            --transition-normal: 0.3s ease;
+            --transition-slow: 0.5s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4eaf5 100%);
+            color: var(--primary-color);
+            line-height: 1.65;
+            padding: 15px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+            flex: 1;
+            padding: 0 10px;
+        }
+
+        /* 头部美化 */
+        header {
+            text-align: center;
+            padding: 24px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--medium-gray);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--secondary-color), var(--accent-color));
+        }
+
+        .developer-info {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            padding: 12px 0 16px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--medium-gray);
+            color: var(--dark-gray);
+        }
+
+        .developer-info p {
+            margin: 0;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .developer-info i {
+            color: var(--secondary-color);
+            font-size: 1rem;
+        }
+
+        .developer-info strong {
+            color: var(--primary-color);
+        }
+
+        .developer-info a {
+            color: var(--secondary-color);
+            text-decoration: none;
+            transition: var(--transition-fast);
+            position: relative;
+        }
+
+        .developer-info a::after {
+            content: "";
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--secondary-color);
+            transition: var(--transition-normal);
+        }
+
+        .developer-info a:hover {
+            color: var(--secondary-dark);
+        }
+
+        .developer-info a:hover::after {
+            width: 100%;
+        }
+
+        header h1 {
+            color: var(--primary-color);
+            margin-bottom: 12px;
+            font-size: 2.1rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        header p {
+            color: var(--dark-gray);
+            font-size: 1.1rem;
+            max-width: 80%;
+            margin: 0 auto;
+        }
+
+        /* 卡片美化 */
+        .section {
+            background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--medium-gray);
+            transition: all var(--transition-normal);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .section::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--secondary-color);
+            border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+        }
+
+        .section:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--secondary-light);
+        }
+
+        .section h2 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--medium-gray);
+            font-size: 1.6rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section h2 i {
+            color: var(--secondary-color);
+            font-size: 1.4rem;
+        }
+
+        /* 表单元素美化 */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--primary-light);
+            font-size: 1.05rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        label i {
+            color: var(--secondary-color);
+            font-size: 0.95rem;
+        }
+
+        input[type="file"],
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--medium-gray);
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            transition: var(--transition-fast);
+            background-color: #ffffff;
+            color: var(--primary-color);
+        }
+
+        input[type="file"] {
+            background-color: var(--light-gray);
+            cursor: pointer;
+        }
+
+        input[type="file"]:hover {
+            background-color: var(--medium-gray);
+        }
+
+        input[type="file"]:focus,
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.15);
+        }
+
+        /* 按钮美化 */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--secondary-color), var(--secondary-dark));
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all var(--transition-fast);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: var(--transition-slow);
+        }
+
+        .btn:hover::after {
+            left: 100%;
+        }
+
+        .btn:hover {
+            background: linear-gradient(135deg, var(--secondary-light), var(--secondary-color));
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(52, 152, 219, 0.2);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(52, 152, 219, 0.2);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--accent-color), var(--accent-dark));
+        }
+
+        .btn-success:hover {
+            background: linear-gradient(135deg, var(--accent-light), var(--accent-color));
+            box-shadow: 0 6px 12px rgba(46, 204, 113, 0.2);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--warning-color), var(--warning-dark));
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, var(--warning-light), var(--warning-color));
+            box-shadow: 0 6px 12px rgba(231, 76, 60, 0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+            background: linear-gradient(135deg, var(--dark-gray), var(--medium-gray)) !important;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 14px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        /* 信息提示框美化 */
+        .info-box {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f0f7ff 100%);
+            border-left: 4px solid var(--secondary-color);
+            padding: 16px;
+            margin: 16px 0;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .info-box i {
+            color: var(--secondary-color);
+            font-size: 1.2rem;
+            margin-top: 2px;
+        }
+
+        .info-box p {
+            margin: 0;
+            color: var(--primary-color);
+            line-height: 1.6;
+        }
+
+        /* 表格美化 */
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--medium-gray);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+        }
+
+        th {
+            padding: 14px 18px;
+            text-align: left;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+            color: white;
+            font-weight: 600;
+            font-size: 0.95rem;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        td {
+            padding: 14px 18px;
+            text-align: left;
+            border-bottom: 1px solid var(--medium-gray);
+            font-size: 0.95rem;
+            transition: var(--transition-fast);
+        }
+
+        tr:nth-child(even) {
+            background-color: var(--light-gray);
+        }
+
+        tr:hover {
+            background-color: #f0f7ff;
+            transform: scale(1.005);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        /* 历史项美化 */
+        .history-item {
+            padding: 20px;
+            border: 1px solid var(--medium-gray);
+            border-radius: var(--radius-lg);
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            box-shadow: var(--shadow-sm);
+            transition: all var(--transition-normal);
+        }
+
+        .history-item:hover {
+            background: linear-gradient(135deg, #f0f7ff 0%, #e8f4f8 100%);
+            border-color: var(--secondary-light);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .history-details {
+            flex: 1;
+        }
+
+        .history-details > div {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .history-meta {
+            color: var(--dark-gray);
+            font-size: 0.85rem;
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .history-meta i {
+            color: var(--secondary-color);
+            font-size: 0.8rem;
+        }
+
+        .history-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .history-results {
+            margin-top: 16px;
+        }
+
+        .history-results h4 {
+            color: var(--primary-color);
+            margin-bottom: 12px;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .history-results h4 i {
+            color: var(--secondary-color);
+            font-size: 1rem;
+        }
+
+        /* 徽章美化 */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 5px 12px;
+            border-radius: var(--radius-full);
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-right: 8px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .badge-success {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .badge-warning {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%);
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+
+        /* 序列号徽章样式 */
+        .serial-number-badge {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: 1px solid #3498db;
+        }
+
+        /* 通知美化 */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            border-radius: var(--radius-lg);
+            color: white;
+            font-weight: 600;
+            box-shadow: var(--shadow-lg);
+            z-index: 1000;
+            transform: translateX(120%);
+            transition: all var(--transition-normal);
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-left: 4px solid white;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, var(--accent-color), var(--accent-dark));
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, var(--warning-color), var(--warning-dark));
+        }
+
+        .notification.info {
+            background: linear-gradient(135deg, var(--secondary-color), var(--secondary-dark));
+        }
+
+        .notification i {
+            font-size: 1.2rem;
+        }
+
+        /* 加载动画美化 */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            gap: 12px;
+            color: var(--primary-color);
+            font-size: 1.1rem;
+        }
+
+        /* 空状态美化 */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--dark-gray);
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            border-radius: var(--radius-lg);
+            border: 1px dashed var(--medium-gray);
+            margin: 16px 0;
+        }
+
+        .empty-state i {
+            font-size: 3.5rem;
+            margin-bottom: 16px;
+            color: var(--secondary-light);
+            opacity: 0.8;
+        }
+
+        .empty-state div {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        .empty-state p {
+            margin-top: 8px;
+            font-size: 1rem;
+            line-height: 1.6;
+            max-width: 60%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* 文件信息美化 */
+        .file-info {
+            margin-top: 16px;
+            padding: 16px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e8f4f8 100%);
+            border-radius: var(--radius-md);
+            border-left: 4px solid var(--accent-color);
+            box-shadow: var(--shadow-sm);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .file-info > div {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+        }
+
+        .file-info strong {
+            color: var(--primary-color);
+            min-width: 100px;
+        }
+
+        .file-info i {
+            color: var(--accent-color);
+            font-size: 1rem;
+        }
+
+        /* 计数器美化 */
+        .counter-box {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background: linear-gradient(135deg, var(--secondary-color), var(--secondary-dark));
+            color: white;
+            border-radius: var(--radius-full);
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-left: 12px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .counter-box i {
+            font-size: 0.85rem;
+        }
+
+        /* 模态框美化 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--modal-overlay);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all var(--transition-normal);
+            padding: 20px;
+            backdrop-filter: blur(2px);
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            width: 92%;
+            max-width: 900px;
+            max-height: 88vh;
+            overflow-y: auto;
+            padding: 30px;
+            transform: scale(0.95) translateY(20px);
+            transition: all var(--transition-normal);
+            border: 1px solid var(--medium-gray);
+            position: relative;
+        }
+
+        .modal-overlay.show .modal-content {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--medium-gray);
+        }
+
+        .modal-title {
+            font-size: 1.7rem;
+            color: var(--primary-color);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-title i {
+            color: var(--secondary-color);
+            font-size: 1.5rem;
+        }
+
+        .close-modal-btn {
+            background: linear-gradient(135deg, var(--warning-color), var(--warning-dark));
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+            font-size: 1.2rem;
+            transition: all var(--transition-fast);
+        }
+
+        .close-modal-btn:hover {
+            background: linear-gradient(135deg, var(--warning-light), var(--warning-color));
+            transform: rotate(90deg);
+            box-shadow: 0 4px 8px rgba(231, 76, 60, 0.2);
+        }
+
+        .modal-table {
+            margin-top: 20px;
+        }
+
+        .modal-table th {
+            font-size: 1rem;
+            padding: 16px 20px;
+        }
+
+        .modal-table td {
+            font-size: 0.95rem;
+            padding: 16px 20px;
+        }
+
+        .modal-meta {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e8f4f8 100%);
+            padding: 18px;
+            border-radius: var(--radius-md);
+            margin-bottom: 20px;
+            font-size: 1rem;
+            border: 1px solid var(--medium-gray);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .modal-meta p {
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-meta strong {
+            color: var(--primary-color);
+            min-width: 120px;
+        }
+
+        .modal-meta i {
+            color: var(--secondary-color);
+            font-size: 1rem;
+        }
+
+        /* 响应式适配 */
+        @media (min-width: 1920px) {
+            .container {
+                max-width: 1200px;
+                gap: 28px;
+            }
+            header h1 {
+                font-size: 2.3rem;
+            }
+            .modal-content {
+                max-width: 1000px;
+            }
+        }
+
+        @media (max-width: 1366px) {
+            .container {
+                max-width: 100%;
+                padding: 0 8px;
+            }
+            th, td {
+                padding: 12px 14px;
+                font-size: 0.9rem;
+            }
+            .modal-content {
+                width: 95%;
+                max-width: 850px;
+                padding: 24px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .history-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .history-actions {
+                margin-top: 12px;
+                width: 100%;
+                justify-content: flex-end;
+            }
+
+            header h1 {
+                font-size: 1.9rem;
+            }
+
+            .section h2 {
+                font-size: 1.4rem;
+            }
+
+            .developer-info {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+
+            .modal-content {
+                width: 95%;
+                padding: 20px;
+                max-height: 85vh;
+            }
+
+            .modal-title {
+                font-size: 1.5rem;
+            }
+
+            .modal-table th {
+                font-size: 1rem;
+                padding: 14px 16px;
+            }
+
+            .modal-table td {
+                font-size: 0.95rem;
+                padding: 14px 16px;
+            }
+
+            .file-info, .modal-meta {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
-    <h1>Meter Sorting System (Fully Automatic)</h1>
+    <div class="container">
+        <header>
+            <div class="developer-info">
+                <p><i class="fas fa-user"></i> <strong>Developer:</strong> Wang Wei</p>
+                <p><i class="fas fa-phone"></i> <strong>Phone:</strong> +254 793389667</p>
+                <p><i class="fas fa-envelope"></i> <strong>Email:</strong> <a href="mailto:wangweiuganda@outlook.com">wangweiuganda@outlook.com</a></p>
+            </div>
 
-    <!-- 1. Excel上传（全自动解析，无手动映射） -->
-    <div class="section">
-        <h2>1. Upload Excel File</h2>
-        <div class="upload-wrap" onclick="document.getElementById('file-input').click()">
-            <p>Click to select Excel file (.xlsx / .xls)</p>
-            <p style="font-size: 12px; color: #718096; margin-top: 8px;">Max file size: 20MB</p>
-            <button class="upload-btn">Select File</button>
-            <input type="file" id="file-input" accept=".xlsx,.xls" onchange="uploadExcel(event)">
-        </div>
-        <div id="upload-alert" class="alert"></div>
-        
-        <!-- 调试面板 -->
-        <div class="debug-panel">
-            <strong>Debug Info:</strong>
-            <div id="upload-debug">No file selected yet</div>
-        </div>
+            <h1>KPLC Smart Meter Sorting System</h1>
+            <p>Upload Excel file and query meter information with precision</p>
+        </header>
+
+        <!-- File Upload Section -->
+        <section class="section" id="file-upload-section">
+            <h2><i class="fas fa-file-upload"></i> Excel File Upload</h2>
+            <div class="form-group">
+                <label for="excel-file"><i class="fas fa-file-excel"></i> Select Excel File (.xlsx, .xls)</label>
+                <input type="file" id="excel-file" accept=".xlsx, .xls" required>
+            </div>
+            <div class="btn-group">
+                <button id="upload-btn" class="btn btn-success"><i class="fas fa-cloud-upload-alt"></i> Upload and Process File</button>
+                <button id="clear-file-btn" class="btn" disabled><i class="fas fa-trash"></i> Clear File</button>
+            </div>
+            <div id="file-info" class="file-info" style="display: none;">
+                <div><i class="fas fa-file-name"></i> <strong>File Name:</strong> <span id="file-name">-</span></div>
+                <div><i class="fas fa-table"></i> <strong>Sheet Name:</strong> <span id="sheet-name">-</span></div>
+                <div><i class="fas fa-list-ol"></i> <strong>Total Records:</strong> <span id="record-count">-</span></div>
+                <div><i class="fas fa-clock"></i> <strong>Upload Time:</strong> <span id="upload-time">-</span></div>
+            </div>
+        </section>
+
+        <!-- Meter Query Section -->
+        <section class="section" id="query-section" style="display: none;">
+            <h2><i class="fas fa-search"></i> Meter Number Query <span id="query-counter" class="counter-box"><i class="fas fa-history"></i> Queries: 0</span></h2>
+            <div class="form-group">
+                <label for="meter-number"><i class="fas fa-hashtag"></i> Enter Meter Number (Exact Match)</label>
+                <input type="text" id="meter-number" placeholder="Enter full meter number..." required>
+            </div>
+            <div class="btn-group">
+                <button id="search-btn" class="btn"><i class="fas fa-search"></i> Search</button>
+                <button id="clear-search-btn" class="btn"><i class="fas fa-broom"></i> Clear</button>
+            </div>
+
+            <div id="search-results" class="table-container" style="display: none;">
+                <h3 style="margin-top: 20px; margin-bottom: 16px; font-size: 1.25rem; color: var(--primary-color);"><i class="fas fa-clipboard-list"></i> Search Results</h3>
+                <div id="results-table"></div>
+            </div>
+
+            <div id="no-results" class="empty-state" style="display: none;">
+                <i class="fas fa-search-slash"></i>
+                <div>No matching records found for the entered meter number.</div>
+                <p>Please check the meter number and try again. Ensure you entered the full and correct meter number.</p>
+            </div>
+        </section>
+
+        <!-- Query History Section -->
+        <section class="section" id="history-section" style="display: none;">
+            <h2><i class="fas fa-history"></i> Query History</h2>
+            <div class="btn-group">
+                <button id="export-history-btn" class="btn btn-success"><i class="fas fa-file-export"></i> Export History to Excel</button>
+                <button id="clear-history-btn" class="btn btn-danger"><i class="fas fa-trash-alt"></i> Clear All History</button>
+            </div>
+            <div id="history-list" class="history-list" style="margin-top: 24px;">
+                <!-- History items will be added here dynamically -->
+                <div id="empty-history" class="empty-state">
+                    <i class="fas fa-history"></i>
+                    <div>No query history available yet.</div>
+                    <p>Start searching for meter numbers to build your history. All queries will be saved for future reference.</p>
+                </div>
+            </div>
+        </section>
     </div>
 
-    <!-- 2. 电表查询 -->
-    <div class="section">
-        <h2>2. Search Meter Number</h2>
-        <input type="text" id="meter-input" placeholder="Enter Meter Number (e.g., M123456)">
-        <button class="btn" onclick="searchMeter()">Search</button>
-        <div id="search-alert" class="alert"></div>
-        
-        <!-- 查询结果 -->
-        <div class="result-card" id="search-result">
-            <h3 style="margin-bottom: 12px;">Search Result</h3>
-            <div class="result-row"><span class="result-label">Meter Number:</span> <span id="res-meter">-</span></div>
-            <div class="result-row"><span class="result-label">Schemes:</span> <span id="res-schemes">-</span></div>
-            <div class="result-row"><span class="result-label">Customer Name:</span> <span id="res-customer">-</span></div>
-            <div class="result-row"><span class="result-label">Mother Ref:</span> <span id="res-mother">-</span></div>
-            <div class="result-row"><span class="result-label">Work Order:</span> <span id="res-work">-</span></div>
-            <!-- 搜索调试 -->
-            <div class="result-row" style="font-size: 11px; color: #64748b; margin-top: 10px;">
-                <span class="result-label">Debug:</span> <span id="search-debug">-</span>
+    <!-- Enlarged View Modal -->
+    <div id="detail-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title"><i class="fas fa-info-circle"></i> Meter Query Details</h2>
+                <button id="close-modal" class="btn close-modal-btn">×</button>
+            </div>
+            <div class="modal-meta">
+                <p><i class="fas fa-hashtag"></i> <strong>Meter Number:</strong> <span id="modal-meter-number">-</span></p>
+                <p><i class="fas fa-clock"></i> <strong>Query Time:</strong> <span id="modal-query-time">-</span></p>
+                <p><i class="fas fa-list-ol"></i> <strong>Total Results:</strong> <span id="modal-result-count">-</span></p>
+            </div>
+            <div id="modal-results" class="modal-table-container">
+                <div id="modal-no-results" class="empty-state" style="display: none;">
+                    <i class="fas fa-search-slash"></i>
+                    <div>No matching records found for this meter number.</div>
+                </div>
+                <div id="modal-results-table" class="modal-table table-container"></div>
             </div>
         </div>
     </div>
 
-    <!-- 3. 查询历史 -->
-    <div class="section">
-        <h2>3. Search History</h2>
-        <button class="btn btn-danger" onclick="clearHistory()">Clear All History</button>
-        <button class="btn btn-success" onclick="exportHistory()">Export History</button>
-        <div id="history-alert" class="alert"></div>
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Time</th>
-                    <th>Meter Number</th>
-                    <th>Schemes</th>
-                    <th>Customer Name</th>
-                    <th>Mother Ref</th>
-                    <th>Work Order</th>
-                </tr>
-            </thead>
-            <tbody id="history-table">
-                <tr><td colspan="7" style="text-align:center">No history</td></tr>
-            </tbody>
-        </table>
-    </div>
+    <!-- Notification Component -->
+    <div id="notification" class="notification"></div>
 
     <script>
-        // 全局变量
-        let excelData = [];     // 自动映射后的最终数据
-        let searchHistory = []; // 查询历史
+        // Global variables
+        let excelData = null;
+        let queryHistory = JSON.parse(localStorage.getItem('meterQueryHistory')) || [];
+        let queryCount = 0;
 
-        // 列名匹配规则（支持中英文、变体）
-        const COLUMN_MATCH_RULES = {
-            meter: [
-                'meter', 'meternumber', 'meter number', 'meter id', 'meter_no', '电表号', '电表编号', '表号', '表编号'
-            ],
-            schemes: [
-                'schemes', 'scheme', 'plan', 'program', '方案', '计划', '套餐'
-            ],
-            customer: [
-                'customer', 'customer name', 'customername', '客户', '客户姓名', '客户名称'
-            ],
-            motherRef: [
-                'mother ref', 'motherref', 'mother reference', '母单', '母单号', 'mother id'
-            ],
-            workOrder: [
-                'work order', 'workorder', 'wo', '工单', '工单号'
-            ]
-        };
+        // DOM Elements
+        const excelFileInput = document.getElementById('excel-file');
+        const uploadBtn = document.getElementById('upload-btn');
+        const clearFileBtn = document.getElementById('clear-file-btn');
+        const fileInfoDiv = document.getElementById('file-info');
+        const fileNameSpan = document.getElementById('file-name');
+        const sheetNameSpan = document.getElementById('sheet-name');
+        const recordCountSpan = document.getElementById('record-count');
+        const uploadTimeSpan = document.getElementById('upload-time');
+        const querySection = document.getElementById('query-section');
+        const historySection = document.getElementById('history-section');
+        const meterNumberInput = document.getElementById('meter-number');
+        const searchBtn = document.getElementById('search-btn');
+        const clearSearchBtn = document.getElementById('clear-search-btn');
+        const searchResultsDiv = document.getElementById('search-results');
+        const resultsTableDiv = document.getElementById('results-table');
+        const noResultsDiv = document.getElementById('no-results');
+        const historyListDiv = document.getElementById('history-list');
+        const emptyHistoryDiv = document.getElementById('empty-history');
+        const exportHistoryBtn = document.getElementById('export-history-btn');
+        const clearHistoryBtn = document.getElementById('clear-history-btn');
+        const queryCounter = document.getElementById('query-counter');
+        const notificationDiv = document.getElementById('notification');
+        
+        // Modal Elements
+        const detailModal = document.getElementById('detail-modal');
+        const closeModalBtn = document.getElementById('close-modal');
+        const modalMeterNumber = document.getElementById('modal-meter-number');
+        const modalQueryTime = document.getElementById('modal-query-time');
+        const modalResultCount = document.getElementById('modal-result-count');
+        const modalNoResults = document.getElementById('modal-no-results');
+        const modalResultsTable = document.getElementById('modal-results-table');
 
-        // 页面初始化
-        window.onload = function() {
-            loadHistory();
-            renderHistory();
-        };
+        // Initialize the application
+        function init() {
+            updateQueryCounter();
+            renderHistoryList();
+            checkHistoryVisibility();
+            
+            // Modal event listeners
+            closeModalBtn.addEventListener('click', closeModal);
+            detailModal.addEventListener('click', (e) => {
+                if (e.target === detailModal) closeModal();
+            });
+            
+            // Escape key to close modal
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && detailModal.classList.contains('show')) {
+                    closeModal();
+                }
+            });
+        }
 
-        // --------------------------
-        // 1. Excel上传 + 全自动列映射
-        // --------------------------
-        function uploadExcel(event) {
-            const file = event.target.files[0];
+        // File Upload and Processing
+        uploadBtn.addEventListener('click', async () => {
+            const file = excelFileInput.files[0];
             if (!file) {
-                updateDebug("No file selected");
+                showNotification('Please select an Excel file first', 'error');
                 return;
             }
 
-            // 基础校验
-            const fileSize = file.size / 1024 / 1024;
-            if (fileSize > 20) {
-                showAlert('upload-alert', `Error: File too large (${fileSize.toFixed(1)}MB). Max 20MB`, 'error');
-                updateDebug(`File size exceed: ${fileSize.toFixed(1)}MB > 20MB`);
-                return;
-            }
-
-            const fileExt = file.name.split('.').pop().toLowerCase();
-            if (!['xlsx', 'xls'].includes(fileExt)) {
-                showAlert('upload-alert', `Error: Invalid file type (.${fileExt}). Only .xlsx/.xls allowed`, 'error');
-                updateDebug(`Invalid file type: .${fileExt}`);
-                return;
-            }
-
-            // 显示上传中
-            showAlert('upload-alert', `Processing file: ${file.name} (${fileSize.toFixed(1)}MB)`, 'info');
-            updateDebug(`
-                File Name: ${file.name}
-                File Size: ${fileSize.toFixed(1)}MB
-                File Type: ${file.type}
-                Extension: .${fileExt}
-                Start Time: ${new Date().toLocaleTimeString()}
-            `);
-
-            // 读取文件（兼容所有浏览器）
-            const reader = new FileReader();
-            reader.readAsBinaryString(file);
+            // Show loading state on button
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '<span class="loading"></span> Processing file...';
+            showNotification('Processing file... Please wait', 'info');
             
-            reader.onload = function(e) {
-                try {
-                    // 解析Excel为原始数组
-                    const workbook = XLSX.read(e.target.result, { 
-                        type: 'binary',
-                        raw: true,
-                        cellDates: false
+            try {
+                const data = await readExcelFile(file);
+                excelData = data;
+                
+                // Update file info with new structure
+                const uploadTime = new Date().toLocaleString();
+                fileNameSpan.textContent = file.name;
+                sheetNameSpan.textContent = data.sheetName;
+                recordCountSpan.textContent = data.records.length;
+                uploadTimeSpan.textContent = uploadTime;
+                
+                fileInfoDiv.style.display = 'grid';
+                
+                // Enable sections and buttons
+                querySection.style.display = 'block';
+                historySection.style.display = 'block';
+                clearFileBtn.disabled = false;
+                excelFileInput.disabled = true;
+                
+                // Reset upload button
+                uploadBtn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Upload and Process File';
+                uploadBtn.disabled = false;
+                
+                showNotification(`File processed successfully! Found ${data.records.length} records`, 'success');
+            } catch (error) {
+                // Reset upload button
+                uploadBtn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Upload and Process File';
+                uploadBtn.disabled = false;
+                
+                showNotification(`Error processing file: ${error.message}`, 'error');
+                console.error('File processing error:', error);
+            }
+        });
+
+        clearFileBtn.addEventListener('click', () => {
+            excelFileInput.value = '';
+            excelFileInput.disabled = false;
+            uploadBtn.disabled = false;
+            clearFileBtn.disabled = true;
+            fileInfoDiv.style.display = 'none';
+            querySection.style.display = 'none';
+            historySection.style.display = 'none';
+            excelData = null;
+            clearSearchResults();
+            showNotification('File cleared successfully', 'info');
+        });
+
+        // Read Excel file using SheetJS
+        function readExcelFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        
+                        // Get first sheet name
+                        const sheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[sheetName];
+                        
+                        // Convert to JSON
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                        
+                        if (jsonData.length === 0) {
+                            reject(new Error('The Excel file contains no data'));
+                            return;
+                        }
+                        
+                        // Check for required columns (case-insensitive check)
+                        const requiredColumns = ['Scheme Name', 'Customer Name', 'Mother Ref', 'Work Order'];
+                        const meterColumns = ['Meter', 'Meter Booked'];
+                        
+                        const actualColumns = Object.keys(jsonData[0]).map(col => col.trim());
+                        const missingColumns = [];
+                        
+                        // Check required columns
+                        requiredColumns.forEach(col => {
+                            const columnExists = actualColumns.some(actualCol => 
+                                actualCol.toLowerCase() === col.toLowerCase()
+                            );
+                            if (!columnExists) {
+                                missingColumns.push(col);
+                            }
+                        });
+                        
+                        // Check meter columns (at least one should exist)
+                        const hasMeterColumn = meterColumns.some(col => 
+                            actualColumns.some(actualCol => 
+                                actualCol.toLowerCase() === col.toLowerCase()
+                            )
+                        );
+                        
+                        if (!hasMeterColumn) {
+                            missingColumns.push(`At least one of these columns: ${meterColumns.join(', ')}`);
+                        }
+                        
+                        if (missingColumns.length > 0) {
+                            reject(new Error(`Missing required columns: ${missingColumns.join(', ')}`));
+                            return;
+                        }
+                        
+                        resolve({
+                            sheetName: sheetName,
+                            records: jsonData,
+                            columns: actualColumns
+                        });
+                    } catch (error) {
+                        reject(new Error(`Failed to parse Excel file: ${error.message}`));
+                    }
+                };
+                
+                reader.onerror = function() {
+                    reject(new Error('Failed to read the file'));
+                };
+                
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        // Search Functionality
+        searchBtn.addEventListener('click', () => {
+            const meterNumber = meterNumberInput.value.trim();
+            
+            if (!excelData) {
+                showNotification('Please upload an Excel file first', 'error');
+                return;
+            }
+            
+            if (!meterNumber) {
+                showNotification('Please enter a meter number', 'error');
+                return;
+            }
+            
+            // Show loading state on button
+            searchBtn.disabled = true;
+            searchBtn.innerHTML = '<span class="loading"></span> Searching...';
+            showNotification('Searching for meter number...', 'info');
+            
+            // Find matching records (case-insensitive exact match)
+            const normalizedMeterNumber = meterNumber.toLowerCase();
+            const matchingRecords = excelData.records.filter(record => {
+                // Check all possible meter columns
+                return Object.entries(record).some(([key, value]) => {
+                    const normalizedKey = key.toLowerCase();
+                    const isMeterColumn = normalizedKey === 'meter' || normalizedKey === 'meter booked';
+                    
+                    if (isMeterColumn && value) {
+                        const normalizedValue = String(value).toLowerCase().trim();
+                        return normalizedValue === normalizedMeterNumber;
+                    }
+                    return false;
+                });
+            });
+            
+            // Reset search button
+            searchBtn.innerHTML = '<i class="fas fa-search"></i> Search';
+            searchBtn.disabled = false;
+            
+            displaySearchResults(matchingRecords, meterNumber);
+            
+            // Add to history
+            addToHistory(meterNumber, matchingRecords);
+        });
+
+        clearSearchBtn.addEventListener('click', () => {
+            meterNumberInput.value = '';
+            clearSearchResults();
+        });
+
+        // Display Search Results - 移除Serial No列
+        function displaySearchResults(records, meterNumber) {
+            clearSearchResults();
+            
+            if (records.length > 0) {
+                // Create table
+                const table = document.createElement('table');
+                
+                // Create header
+                const thead = document.createElement('thead');
+                const headerRow = document.createElement('tr');
+                
+                // 移除Serial No列，只保留原有列
+                const displayColumns = [
+                    { key: 'input_meter', label: 'Meter Number' },
+                    { key: 'Scheme Name', label: 'Scheme Name' },
+                    { key: 'Customer Name', label: 'Customer Name' },
+                    { key: 'Mother Ref', label: 'Mother Ref' },
+                    { key: 'Work Order', label: 'Work Order' }
+                ];
+                
+                // Create header cells
+                displayColumns.forEach(col => {
+                    const th = document.createElement('th');
+                    th.textContent = col.label;
+                    headerRow.appendChild(th);
+                });
+                
+                thead.appendChild(headerRow);
+                table.appendChild(thead);
+                
+                // Create body
+                const tbody = document.createElement('tbody');
+                
+                records.forEach(record => {
+                    const row = document.createElement('tr');
+                    
+                    displayColumns.forEach(col => {
+                        const td = document.createElement('td');
+                        
+                        // Show INPUT meter number (exact value entered) in meter column
+                        if (col.key === 'input_meter') {
+                            td.textContent = meterNumber || '-';
+                            td.style.fontWeight = '600';
+                            td.style.color = '#2c3e50';
+                        } else {
+                            // Find the column with matching name (case-insensitive)
+                            const actualKey = Object.keys(record).find(key => 
+                                key.toLowerCase() === col.key.toLowerCase()
+                            );
+                            td.textContent = actualKey ? record[actualKey] || '-' : '-';
+                        }
+                        
+                        row.appendChild(td);
                     });
-
-                    const sheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[sheetName];
-                    const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-                    if (rawData.length < 2) {
-                        throw new Error(`No data found (only ${rawData.length} rows)`);
-                    }
-
-                    // 提取表头和数据行
-                    const headers = rawData[0].map(h => h ? cleanHeader(String(h)) : '');
-                    const dataRows = rawData.slice(1);
-
-                    // 全自动列映射（核心）
-                    const columnIndexes = getColumnIndexes(headers);
-                    excelData = mapAutoColumns(dataRows, columnIndexes);
-
-                    // 上传成功提示
-                    showAlert('upload-alert', `Success: Loaded ${excelData.length} valid records! Ready to search.`, 'success');
-                    updateDebug(`
-                        Sheet Name: ${sheetName}
-                        Total Rows: ${rawData.length} (1 header + ${dataRows.length} data)
-                        Column Count: ${headers.length}
-                        Auto Mapping Result:
-                        - Meter Number: Column ${columnIndexes.meter + 1} (${rawData[0][columnIndexes.meter] || 'Unnamed'})
-                        - Schemes: Column ${columnIndexes.schemes + 1} (${rawData[0][columnIndexes.schemes] || 'Unnamed'})
-                        - Customer Name: Column ${columnIndexes.customer + 1} (${rawData[0][columnIndexes.customer] || 'Unnamed'})
-                        - Mother Ref: Column ${columnIndexes.motherRef + 1} (${rawData[0][columnIndexes.motherRef] || 'Unnamed'})
-                        - Work Order: Column ${columnIndexes.workOrder + 1} (${rawData[0][columnIndexes.workOrder] || 'Unnamed'})
-                        Valid Records: ${excelData.length}
-                        First 5 Meters: ${excelData.slice(0,5).map(item => item.meter).join(', ')}
-                    `);
-
-                } catch (error) {
-                    showAlert('upload-alert', `Error parsing Excel: ${error.message}`, 'error');
-                    updateDebug(`
-                        Parsing Error: ${error.message}
-                        Error Stack: ${error.stack || 'No stack'}
-                    `);
-                    excelData = [];
-                }
-            };
-
-            reader.onerror = function(error) {
-                showAlert('upload-alert', `Error reading file: ${error.message}`, 'error');
-                updateDebug(`File read error: ${error.message}`);
-                excelData = [];
-            };
-        }
-
-        // --------------------------
-        // 自动列映射辅助函数
-        // --------------------------
-        // 清洗表头（统一格式，方便匹配）
-        function cleanHeader(header) {
-            return header
-                .trim()
-                .toLowerCase()
-                .replace(/\s+/g, '')    // 移除所有空格
-                .replace(/[^a-z0-9\u4e00-\u9fa5]/g, '') // 移除特殊字符
-                .replace(/全角/g, '半角'); // 全角转半角（简化版）
-        }
-
-        // 获取各字段对应的列索引
-        function getColumnIndexes(headers) {
-            const indexes = {
-                meter: 0,
-                schemes: 1,
-                customer: 2,
-                motherRef: 3,
-                workOrder: 4
-            };
-
-            // 遍历表头匹配字段
-            headers.forEach((header, idx) => {
-                Object.keys(COLUMN_MATCH_RULES).forEach(field => {
-                    if (COLUMN_MATCH_RULES[field].some(rule => header.includes(cleanHeader(rule)))) {
-                        indexes[field] = idx;
-                    }
+                    
+                    tbody.appendChild(row);
                 });
-            });
-
-            return indexes;
-        }
-
-        // 自动映射数据行
-        function mapAutoColumns(rows, indexes) {
-            const mappedData = [];
-
-            rows.forEach(row => {
-                // 只保留有电表编号的行
-                const meterValue = row[indexes.meter] ? String(row[indexes.meter]).trim().toUpperCase() : '';
-                if (!meterValue) return;
-
-                mappedData.push({
-                    meter: meterValue,
-                    schemes: row[indexes.schemes] ? String(row[indexes.schemes]).trim() : 'N/A',
-                    customer: row[indexes.customer] ? String(row[indexes.customer]).trim() : 'N/A',
-                    motherRef: row[indexes.motherRef] ? String(row[indexes.motherRef]).trim() : 'N/A',
-                    workOrder: row[indexes.workOrder] ? String(row[indexes.workOrder]).trim() : 'N/A'
-                });
-            });
-
-            return mappedData;
-        }
-
-        // --------------------------
-        // 2. 电表查询（精准匹配+调试）
-        // --------------------------
-        function searchMeter() {
-            const input = document.getElementById('meter-input').value.trim().toUpperCase();
-            if (!input) {
-                showAlert('search-alert', 'Error: Please enter Meter Number', 'error');
-                return;
-            }
-
-            if (excelData.length === 0) {
-                showAlert('search-alert', 'Error: No Excel data loaded. Upload Excel first!', 'error');
-                return;
-            }
-
-            // 精准搜索（支持完全匹配/包含匹配）
-            const exactMatch = excelData.find(item => item.meter === input);
-            const fuzzyMatch = exactMatch || excelData.find(item => item.meter.includes(input));
-
-            // 显示结果和调试信息
-            const resultCard = document.getElementById('search-result');
-            resultCard.style.display = 'block';
-            const debugEl = document.getElementById('search-debug');
-
-            if (fuzzyMatch) {
-                // 显示所有关联信息
-                document.getElementById('res-meter').textContent = fuzzyMatch.meter;
-                document.getElementById('res-schemes').textContent = fuzzyMatch.schemes;
-                document.getElementById('res-customer').textContent = fuzzyMatch.customer;
-                document.getElementById('res-mother').textContent = fuzzyMatch.motherRef;
-                document.getElementById('res-work').textContent = fuzzyMatch.workOrder;
                 
-                // 调试信息
-                debugEl.textContent = `Match type: ${exactMatch ? 'Exact' : 'Fuzzy'} | Total records: ${excelData.length}`;
-                showAlert('search-alert', 'Success: Record found', 'success');
+                table.appendChild(tbody);
+                resultsTableDiv.appendChild(table);
+                searchResultsDiv.style.display = 'block';
                 
-                // 添加到历史
-                addToHistory(fuzzyMatch);
+                showNotification(`Found ${records.length} matching record(s)`, 'success');
             } else {
-                // 未找到
-                document.getElementById('res-meter').textContent = input;
-                document.getElementById('res-schemes').textContent = 'Not Found';
-                document.getElementById('res-customer').textContent = 'Not Found';
-                document.getElementById('res-mother').textContent = 'Not Found';
-                document.getElementById('res-work').textContent = 'Not Found';
-                
-                // 调试信息
-                debugEl.textContent = `No match found | Input: ${input} | Total records: ${excelData.length} | First 10 meters: ${excelData.slice(0,10).map(item => item.meter).join(', ')}`;
-                showAlert('search-alert', 'Error: Meter Number not found', 'error');
-                
-                // 添加到历史
-                addToHistory({
-                    meter: input,
-                    schemes: 'Not Found',
-                    customer: 'Not Found',
-                    motherRef: 'Not Found',
-                    workOrder: 'Not Found'
-                });
+                noResultsDiv.style.display = 'block';
+                showNotification('No matching records found', 'warning');
             }
         }
 
-        // --------------------------
-        // 3. 历史记录管理
-        // --------------------------
-        function addToHistory(record) {
-            searchHistory.push({
-                time: new Date().toLocaleString(),
-                meter: record.meter,
-                schemes: record.schemes,
-                customer: record.customer,
-                motherRef: record.motherRef,
-                workOrder: record.workOrder
-            });
-            localStorage.setItem('meterHistory', JSON.stringify(searchHistory));
-            renderHistory();
+        // Clear Search Results
+        function clearSearchResults() {
+            resultsTableDiv.innerHTML = '';
+            searchResultsDiv.style.display = 'none';
+            noResultsDiv.style.display = 'none';
         }
 
-        function loadHistory() {
-            const saved = localStorage.getItem('meterHistory');
-            if (saved) {
-                try {
-                    searchHistory = JSON.parse(saved);
-                } catch (e) {
-                    searchHistory = [];
-                }
-            }
-        }
-
-        function renderHistory() {
-            const tbody = document.getElementById('history-table');
-            if (searchHistory.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center">No history</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = searchHistory.map((item, i) => `
-                <tr>
-                    <td>${i+1}</td>
-                    <td>${item.time}</td>
-                    <td>${item.meter}</td>
-                    <td>${item.schemes}</td>
-                    <td>${item.customer}</td>
-                    <td>${item.motherRef}</td>
-                    <td>${item.workOrder}</td>
-                </tr>
-            `).join('');
-        }
-
-        function clearHistory() {
-            if (confirm('Clear all history?')) {
-                searchHistory = [];
-                localStorage.removeItem('meterHistory');
-                renderHistory();
-                showAlert('history-alert', 'History cleared', 'success');
-            }
-        }
-
-        function exportHistory() {
-            if (searchHistory.length === 0) {
-                showAlert('history-alert', 'No history to export', 'error');
-                return;
-            }
-
-            const exportData = searchHistory.map((item, i) => ({
-                'ID': i+1,
-                'Search Time': item.time,
-                'Meter Number': item.meter,
-                'Schemes': item.schemes,
-                'Customer Name': item.customer,
-                'Mother Ref': item.motherRef,
-                'Work Order': item.workOrder
-            }));
-
-            const ws = XLSX.utils.json_to_sheet(exportData);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, 'History');
-            XLSX.writeFile(wb, `Meter_History_${new Date().toISOString().slice(0,10)}.xlsx`);
+        // History Management
+        function addToHistory(meterNumber, results) {
+            const historyItem = {
+                id: Date.now(),
+                meterNumber: meterNumber,
+                resultCount: results.length,
+                timestamp: new Date().toISOString(),
+                results: results
+            };
             
-            showAlert('history-alert', 'History exported successfully', 'success');
+            queryHistory.unshift(historyItem); // Add to beginning
+            queryCount++;
+            updateQueryCounter();
+            
+            // Save to localStorage
+            localStorage.setItem('meterQueryHistory', JSON.stringify(queryHistory));
+            
+            renderHistoryList();
+            checkHistoryVisibility();
         }
 
-        // --------------------------
-        // 辅助函数
-        // --------------------------
-        function showAlert(id, message, type) {
-            const el = document.getElementById(id);
-            el.textContent = message;
-            el.className = `alert alert-${type}`;
-            el.style.display = 'block';
-            setTimeout(() => el.style.display = 'none', 5000);
+        // Render History List with Full Details - 移除表格中的Serial No列
+        function renderHistoryList() {
+            if (queryHistory.length === 0) {
+                emptyHistoryDiv.style.display = 'block';
+                historyListDiv.innerHTML = '';
+                historyListDiv.appendChild(emptyHistoryDiv);
+                return;
+            }
+            
+            emptyHistoryDiv.style.display = 'none';
+            historyListDiv.innerHTML = '';
+            
+            // 遍历历史记录，保留历史项的序列号徽章，移除表格内的Serial No列
+            queryHistory.forEach((item, index) => {
+                const serialNumber = index + 1; // 历史项序列号（仅徽章显示）
+                const historyItemDiv = document.createElement('div');
+                historyItemDiv.className = 'history-item';
+                historyItemDiv.setAttribute('data-serial', serialNumber);
+                
+                const date = new Date(item.timestamp);
+                const formattedDate = date.toLocaleString();
+                
+                // Create history header - 保留历史项的序列号徽章
+                const historyHeader = document.createElement('div');
+                historyHeader.className = 'history-header';
+                
+                historyHeader.innerHTML = `
+                    <div class="history-details">
+                        <div>
+                            <span class="badge serial-number-badge">#${serialNumber}</span>
+                            <strong>Meter Number:</strong> ${item.meterNumber}
+                            <span class="badge ${item.resultCount > 0 ? 'badge-success' : 'badge-warning'}">
+                                <i class="fas fa-${item.resultCount > 0 ? 'check' : 'times'}"></i> ${item.resultCount} result(s)
+                            </span>
+                        </div>
+                        <div class="history-meta">
+                            <i class="fas fa-clock"></i> Query Time: ${formattedDate} 
+                            <i class="fas fa-id-card"></i> Query ID: ${item.id}
+                        </div>
+                    </div>
+                    <div class="history-actions">
+                        <button class="btn view-result-btn" data-id="${item.id}"><i class="fas fa-eye"></i> View Details</button>
+                    </div>
+                `;
+                
+                historyItemDiv.appendChild(historyHeader);
+                
+                // Create history results section with full details table
+                const historyResults = document.createElement('div');
+                historyResults.className = 'history-results';
+                
+                if (item.resultCount > 0) {
+                    historyResults.innerHTML = '<h4><i class="fas fa-clipboard-list"></i> Query Results</h4>';
+                    
+                    // Create results table - 移除Serial No列
+                    const table = document.createElement('table');
+                    const tableContainer = document.createElement('div');
+                    tableContainer.className = 'table-container';
+                    
+                    // Table header - 移除Serial No列
+                    const thead = document.createElement('thead');
+                    const headerRow = document.createElement('tr');
+                    const columns = [
+                        { label: 'Meter Number' },
+                        { label: 'Scheme Name' },
+                        { label: 'Customer Name' },
+                        { label: 'Mother Ref' },
+                        { label: 'Work Order' }
+                    ];
+                    
+                    columns.forEach(col => {
+                        const th = document.createElement('th');
+                        th.textContent = col.label;
+                        headerRow.appendChild(th);
+                    });
+                    
+                    thead.appendChild(headerRow);
+                    table.appendChild(thead);
+                    
+                    // Table body
+                    const tbody = document.createElement('tbody');
+                    
+                    item.results.forEach(record => {
+                        const row = document.createElement('tr');
+                        
+                        // Meter Number (input value)
+                        const meterTd = document.createElement('td');
+                        meterTd.textContent = item.meterNumber;
+                        meterTd.style.fontWeight = '600';
+                        meterTd.style.color = '#2c3e50';
+                        row.appendChild(meterTd);
+                        
+                        // Scheme Name
+                        const schemeTd = document.createElement('td');
+                        const schemeKey = Object.keys(record).find(key => key.toLowerCase() === 'scheme name');
+                        schemeTd.textContent = schemeKey ? record[schemeKey] || '-' : '-';
+                        row.appendChild(schemeTd);
+                        
+                        // Customer Name
+                        const customerTd = document.createElement('td');
+                        const customerKey = Object.keys(record).find(key => key.toLowerCase() === 'customer name');
+                        customerTd.textContent = customerKey ? record[customerKey] || '-' : '-';
+                        row.appendChild(customerTd);
+                        
+                        // Mother Ref
+                        const motherTd = document.createElement('td');
+                        const motherKey = Object.keys(record).find(key => key.toLowerCase() === 'mother ref');
+                        motherTd.textContent = motherKey ? record[motherKey] || '-' : '-';
+                        row.appendChild(motherTd);
+                        
+                        // Work Order
+                        const workTd = document.createElement('td');
+                        const workKey = Object.keys(record).find(key => key.toLowerCase() === 'work order');
+                        workTd.textContent = workKey ? record[workKey] || '-' : '-';
+                        row.appendChild(workTd);
+                        
+                        tbody.appendChild(row);
+                    });
+                    
+                    table.appendChild(tbody);
+                    tableContainer.appendChild(table);
+                    historyResults.appendChild(tableContainer);
+                } else {
+                    historyResults.innerHTML = `
+                        <h4><i class="fas fa-clipboard-list"></i> Query Results</h4>
+                        <div class="empty-state" style="padding: 20px 0; margin: 0;">
+                            <i class="fas fa-search-slash"></i>
+                            <div>No matching records found for this meter number.</div>
+                        </div>
+                    `;
+                }
+                
+                historyItemDiv.appendChild(historyResults);
+                historyListDiv.appendChild(historyItemDiv);
+            });
+            
+            // Add event listeners to view buttons
+            document.querySelectorAll('.view-result-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const historyId = parseInt(btn.getAttribute('data-id'));
+                    const historyItem = queryHistory.find(item => item.id === historyId);
+                    
+                    if (historyItem) {
+                        // Open enlarged view modal
+                        openModal(historyItem);
+                        
+                        // Optional: Also update main search results
+                        meterNumberInput.value = historyItem.meterNumber;
+                        displaySearchResults(historyItem.results, historyItem.meterNumber);
+                        
+                        // Scroll to search results section
+                        querySection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+            });
         }
 
-        function updateDebug(message) {
-            document.getElementById('upload-debug').textContent = message.replace(/\n/g, '\n');
+        // Modal Functions - 模态框中也移除Serial No列
+        function openModal(historyItem) {
+            // Clear previous modal content
+            modalResultsTable.innerHTML = '';
+            
+            // Populate modal metadata
+            modalMeterNumber.textContent = historyItem.meterNumber;
+            
+            const date = new Date(historyItem.timestamp);
+            modalQueryTime.textContent = date.toLocaleString();
+            modalResultCount.textContent = historyItem.resultCount;
+            
+            // Show/hide no results message
+            if (historyItem.resultCount > 0) {
+                modalNoResults.style.display = 'none';
+                
+                // Create enlarged table - 移除Serial No列
+                const table = document.createElement('table');
+                table.className = 'modal-table';
+                
+                // Table header - 移除Serial No列
+                const thead = document.createElement('thead');
+                const headerRow = document.createElement('tr');
+                const columns = [
+                    { label: 'Meter Number' },
+                    { label: 'Scheme Name' },
+                    { label: 'Customer Name' },
+                    { label: 'Mother Ref' },
+                    { label: 'Work Order' }
+                ];
+                
+                columns.forEach(col => {
+                    const th = document.createElement('th');
+                    th.textContent = col.label;
+                    headerRow.appendChild(th);
+                });
+                
+                thead.appendChild(headerRow);
+                table.appendChild(thead);
+                
+                // Table body
+                const tbody = document.createElement('tbody');
+                
+                historyItem.results.forEach(record => {
+                    const row = document.createElement('tr');
+                    
+                    // Meter Number (input value)
+                    const meterTd = document.createElement('td');
+                    meterTd.textContent = historyItem.meterNumber;
+                    meterTd.style.fontWeight = '700';
+                    meterTd.style.color = '#2c3e50';
+                    row.appendChild(meterTd);
+                    
+                    // Scheme Name
+                    const schemeTd = document.createElement('td');
+                    const schemeKey = Object.keys(record).find(key => key.toLowerCase() === 'scheme name');
+                    schemeTd.textContent = schemeKey ? record[schemeKey] || '-' : '-';
+                    row.appendChild(schemeTd);
+                    
+                    // Customer Name
+                    const customerTd = document.createElement('td');
+                    const customerKey = Object.keys(record).find(key => key.toLowerCase() === 'customer name');
+                    customerTd.textContent = customerKey ? record[customerKey] || '-' : '-';
+                    row.appendChild(customerTd);
+                    
+                    // Mother Ref
+                    const motherTd = document.createElement('td');
+                    const motherKey = Object.keys(record).find(key => key.toLowerCase() === 'mother ref');
+                    motherTd.textContent = motherKey ? record[motherKey] || '-' : '-';
+                    row.appendChild(motherTd);
+                    
+                    // Work Order
+                    const workTd = document.createElement('td');
+                    const workKey = Object.keys(record).find(key => key.toLowerCase() === 'work order');
+                    workTd.textContent = workKey ? record[workKey] || '-' : '-';
+                    row.appendChild(workTd);
+                    
+                    tbody.appendChild(row);
+                });
+                
+                table.appendChild(tbody);
+                modalResultsTable.appendChild(table);
+            } else {
+                modalNoResults.style.display = 'block';
+            }
+            
+            // Show modal
+            detailModal.classList.add('show');
+            // Prevent body scrolling
+            document.body.style.overflow = 'hidden';
         }
+
+        function closeModal() {
+            // Hide modal
+            detailModal.classList.remove('show');
+            // Restore body scrolling
+            document.body.style.overflow = '';
+        }
+
+        function checkHistoryVisibility() {
+            if (queryHistory.length > 0) {
+                historySection.style.display = 'block';
+            }
+        }
+
+        function updateQueryCounter() {
+            queryCounter.innerHTML = `<i class="fas fa-history"></i> Queries: ${queryCount}`;
+        }
+
+        // Export History to Excel - 移除序列号相关字段
+        exportHistoryBtn.addEventListener('click', () => {
+            if (queryHistory.length === 0) {
+                showNotification('No history to export', 'error');
+                return;
+            }
+            
+            // Show loading state on button
+            exportHistoryBtn.disabled = true;
+            exportHistoryBtn.innerHTML = '<span class="loading"></span> Exporting...';
+            showNotification('Exporting history... Please wait', 'info');
+            
+            try {
+                // Prepare detailed export data - 移除序列号字段
+                const exportData = [];
+                
+                queryHistory.forEach(item => {
+                    const date = new Date(item.timestamp);
+                    
+                    if (item.resultCount > 0) {
+                        // Add one row per result with full details
+                        item.results.forEach((record, index) => {
+                            exportData.push({
+                                'Query ID': item.id,
+                                'Meter Number': item.meterNumber,
+                                'Scheme Name': record['Scheme Name'] || record[Object.keys(record).find(key => key.toLowerCase() === 'scheme name')] || '-',
+                                'Customer Name': record['Customer Name'] || record[Object.keys(record).find(key => key.toLowerCase() === 'customer name')] || '-',
+                                'Mother Ref': record['Mother Ref'] || record[Object.keys(record).find(key => key.toLowerCase() === 'mother ref')] || '-',
+                                'Work Order': record['Work Order'] || record[Object.keys(record).find(key => key.toLowerCase() === 'work order')] || '-',
+                                'Query Time': date.toLocaleString(),
+                                'Result Index': index + 1,
+                                'Total Results': item.resultCount
+                            });
+                        });
+                    } else {
+                        // Add row for no results
+                        exportData.push({
+                            'Query ID': item.id,
+                            'Meter Number': item.meterNumber,
+                            'Scheme Name': '-',
+                            'Customer Name': '-',
+                            'Mother Ref': '-',
+                            'Work Order': '-',
+                            'Query Time': date.toLocaleString(),
+                            'Result Index': '-',
+                            'Total Results': 0
+                        });
+                    }
+                });
+                
+                // Create workbook and worksheet
+                const ws = XLSX.utils.json_to_sheet(exportData);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Meter Query History");
+                
+                // Generate filename with timestamp
+                const timestamp = new Date().toISOString().replace(/[-:\.T]/g, '').substring(0, 14);
+                const filename = `Meter_Query_History_${timestamp}.xlsx`;
+                
+                // Export file
+                XLSX.writeFile(wb, filename);
+                
+                // Reset export button
+                exportHistoryBtn.innerHTML = '<i class="fas fa-file-export"></i> Export History to Excel';
+                exportHistoryBtn.disabled = false;
+                
+                showNotification(`History exported successfully to ${filename}`, 'success');
+            } catch (error) {
+                // Reset export button
+                exportHistoryBtn.innerHTML = '<i class="fas fa-file-export"></i> Export History to Excel';
+                exportHistoryBtn.disabled = false;
+                
+                showNotification(`Error exporting history: ${error.message}`, 'error');
+                console.error('Export error:', error);
+            }
+        });
+
+        // Clear History
+        clearHistoryBtn.addEventListener('click', () => {
+            if (queryHistory.length === 0) {
+                showNotification('No history to clear', 'error');
+                return;
+            }
+            
+            if (confirm('Are you sure you want to clear all query history? This action cannot be undone.')) {
+                queryHistory = [];
+                queryCount = 0;
+                updateQueryCounter();
+                
+                // Clear localStorage
+                localStorage.removeItem('meterQueryHistory');
+                
+                renderHistoryList();
+                showNotification('All query history cleared successfully', 'success');
+            }
+        });
+
+        // Notification System
+        function showNotification(message, type = 'info') {
+            const iconMap = {
+                success: 'fas fa-check-circle',
+                error: 'fas fa-exclamation-circle',
+                info: 'fas fa-info-circle',
+                warning: 'fas fa-exclamation-triangle'
+            };
+            
+            notificationDiv.innerHTML = `<i class="${iconMap[type] || iconMap.info}"></i> ${message}`;
+            notificationDiv.className = `notification ${type}`;
+            
+            // Show notification
+            notificationDiv.classList.add('show');
+            
+            // Hide after 4 seconds (longer for better readability)
+            setTimeout(() => {
+                notificationDiv.classList.remove('show');
+            }, 4000);
+        }
+
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
