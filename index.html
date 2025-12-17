@@ -3,551 +3,447 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meter Sorting System - Stable Version</title>
-    <!-- Simplified dependencies for stability -->
+    <title>Meter Sorting System - Fully Automatic</title>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: Arial, sans-serif;
-        }
-        body {
-            background: #f5f5f5;
-            padding: 20px;
-        }
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-        .card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        .upload-area {
-            border: 2px dashed #ccc;
-            border-radius: 8px;
-            padding: 40px 20px;
-            text-align: center;
-            cursor: pointer;
-            margin: 10px 0;
-        }
-        .upload-area:hover {
-            border-color: #165DFF;
-        }
-        .btn {
-            background: #165DFF;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            margin: 5px 0;
-        }
-        .btn:hover {
-            background: #0e48d8;
-        }
-        .input-box {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            margin: 10px 0;
-        }
-        .alert {
-            padding: 10px;
-            border-radius: 6px;
-            margin: 10px 0;
-            display: none;
-        }
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        .alert-info {
-            background: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 10px 0;
-        }
-        th, td {
-            padding: 10px;
-            border: 1px solid #ddd;
-            text-align: left;
-        }
-        th {
-            background: #f8f9fa;
-        }
-        .hidden {
-            display: none;
-        }
-        .debug-panel {
-            background: #f0f0f0;
-            padding: 15px;
-            border-radius: 6px;
-            margin: 10px 0;
-            font-size: 12px;
-            color: #333;
-        }
-        .result-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
-        .result-card {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 6px;
-            border-left: 4px solid #165DFF;
-        }
-        .result-label {
-            font-weight: bold;
-            color: #666;
-            font-size: 12px;
-            margin-bottom: 5px;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+        body { background: #f5f7fa; padding: 20px; max-width: 1200px; margin: 0 auto; }
+        .section { background: white; padding: 24px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 24px; }
+        h1 { font-size: 24px; color: #2d3748; border-bottom: 2px solid #3182ce; padding-bottom: 8px; margin-bottom: 16px; }
+        h2 { font-size: 18px; color: #3182ce; margin-bottom: 16px; }
+        
+        /* 上传区域 */
+        .upload-wrap { border: 2px dashed #cbd5e0; border-radius: 6px; padding: 40px 20px; text-align: center; cursor: pointer; margin: 16px 0; }
+        .upload-wrap:hover { border-color: #3182ce; }
+        #file-input { display: none; }
+        .upload-btn { background: #3182ce; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin-top: 10px; }
+        
+        /* 按钮 & 输入框 */
+        .btn { background: #3182ce; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin: 5px; }
+        .btn-danger { background: #e53e3e; }
+        .btn-success { background: #38a169; }
+        input[type="text"] { width: 100%; max-width: 400px; padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px; margin: 10px 0; }
+        
+        /* 提示框 & 结果 */
+        .alert { padding: 12px; border-radius: 6px; margin: 16px 0; display: none; }
+        .alert-success { background: #f0fff4; color: #22543d; border: 1px solid #c6f6d5; }
+        .alert-error { background: #fff5f5; color: #742a2a; border: 1px solid #fed7d7; }
+        .alert-info { background: #ebf8ff; color: #2c5282; border: 1px solid #bee3f8; }
+        .result-card { background: #f7fafc; padding: 16px; border-radius: 6px; border-left: 4px solid #3182ce; margin: 16px 0; display: none; }
+        .result-row { margin: 8px 0; }
+        .result-label { display: inline-block; width: 140px; font-weight: 500; }
+        
+        /* 表格 & 调试 */
+        table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { background: #f7fafc; }
+        .debug-panel { background: #f7fafc; padding: 12px; border-radius: 6px; margin: 16px 0; font-size: 12px; color: #64748b; max-height: 300px; overflow-y: auto; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Meter Sorting System (Stable Version)</h1>
+    <h1>Meter Sorting System (Fully Automatic)</h1>
+
+    <!-- 1. Excel上传（全自动解析，无手动映射） -->
+    <div class="section">
+        <h2>1. Upload Excel File</h2>
+        <div class="upload-wrap" onclick="document.getElementById('file-input').click()">
+            <p>Click to select Excel file (.xlsx / .xls)</p>
+            <p style="font-size: 12px; color: #718096; margin-top: 8px;">Max file size: 20MB</p>
+            <button class="upload-btn">Select File</button>
+            <input type="file" id="file-input" accept=".xlsx,.xls" onchange="uploadExcel(event)">
+        </div>
+        <div id="upload-alert" class="alert"></div>
         
-        <!-- Step 1: Excel Upload -->
-        <div class="card">
-            <h2>1. Upload Excel File</h2>
-            <div class="upload-area" id="uploadArea">
-                <input type="file" id="excelFile" accept=".xlsx,.xls" style="display: none;">
-                <p>Click to select Excel file (.xlsx/.xls)</p>
-                <button class="btn" onclick="document.getElementById('excelFile').click()">Select File</button>
-            </div>
-            <div id="uploadAlert" class="alert"></div>
-            
-            <!-- Debug Panel -->
-            <div class="debug-panel">
-                <h4>Debug Information:</h4>
-                <p id="debugInfo">No file uploaded</p>
-            </div>
+        <!-- 调试面板 -->
+        <div class="debug-panel">
+            <strong>Debug Info:</strong>
+            <div id="upload-debug">No file selected yet</div>
         </div>
+    </div>
 
-        <!-- Step 2: Search -->
-        <div class="card">
-            <h2>2. Search Meter Number</h2>
-            <input type="text" id="meterInput" class="input-box" placeholder="Enter Meter Number">
-            <button class="btn" onclick="searchMeter()">Search Schemes</button>
-            <div id="searchAlert" class="alert"></div>
-            <div id="resultArea" style="margin-top: 10px; display: none;">
-                <h3>Search Result:</h3>
-                <div class="result-grid">
-                    <div class="result-card">
-                        <div class="result-label">Meter Number</div>
-                        <div id="resultMeter">-</div>
-                    </div>
-                    <div class="result-card">
-                        <div class="result-label">Schemes</div>
-                        <div id="resultScheme">-</div>
-                    </div>
-                    <div class="result-card">
-                        <div class="result-label">Customer Name</div>
-                        <div id="resultCustomer">-</div>
-                    </div>
-                    <div class="result-card">
-                        <div class="result-label">Mother Ref</div>
-                        <div id="resultMotherRef">-</div>
-                    </div>
-                    <div class="result-card">
-                        <div class="result-label">Work Order</div>
-                        <div id="resultWorkOrder">-</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Step 3: Search History -->
-        <div class="card">
-            <h2>3. Search History</h2>
-            <button class="btn" style="background: #dc3545;" onclick="clearHistory()">Clear History</button>
-            <button class="btn" style="background: #28a745;" onclick="exportHistory()">Export History</button>
-            <div style="overflow-x: auto; margin-top: 10px;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Serial No.</th>
-                            <th>Search Time</th>
-                            <th>Meter Number</th>
-                            <th>Schemes</th>
-                            <th>Customer Name</th>
-                            <th>Mother Ref</th>
-                            <th>Work Order</th>
-                        </tr>
-                    </thead>
-                    <tbody id="historyTable">
-                        <tr>
-                            <td colspan="7" style="text-align: center;">No history records</td>
-                        </tr>
-                    </tbody>
-                </table>
+    <!-- 2. 电表查询 -->
+    <div class="section">
+        <h2>2. Search Meter Number</h2>
+        <input type="text" id="meter-input" placeholder="Enter Meter Number (e.g., M123456)">
+        <button class="btn" onclick="searchMeter()">Search</button>
+        <div id="search-alert" class="alert"></div>
+        
+        <!-- 查询结果 -->
+        <div class="result-card" id="search-result">
+            <h3 style="margin-bottom: 12px;">Search Result</h3>
+            <div class="result-row"><span class="result-label">Meter Number:</span> <span id="res-meter">-</span></div>
+            <div class="result-row"><span class="result-label">Schemes:</span> <span id="res-schemes">-</span></div>
+            <div class="result-row"><span class="result-label">Customer Name:</span> <span id="res-customer">-</span></div>
+            <div class="result-row"><span class="result-label">Mother Ref:</span> <span id="res-mother">-</span></div>
+            <div class="result-row"><span class="result-label">Work Order:</span> <span id="res-work">-</span></div>
+            <!-- 搜索调试 -->
+            <div class="result-row" style="font-size: 11px; color: #64748b; margin-top: 10px;">
+                <span class="result-label">Debug:</span> <span id="search-debug">-</span>
             </div>
         </div>
     </div>
 
-    <script>
-        // Global variables
-        let excelData = []; // Store Excel data
-        let searchHistory = []; // Search history
+    <!-- 3. 查询历史 -->
+    <div class="section">
+        <h2>3. Search History</h2>
+        <button class="btn btn-danger" onclick="clearHistory()">Clear All History</button>
+        <button class="btn btn-success" onclick="exportHistory()">Export History</button>
+        <div id="history-alert" class="alert"></div>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Time</th>
+                    <th>Meter Number</th>
+                    <th>Schemes</th>
+                    <th>Customer Name</th>
+                    <th>Mother Ref</th>
+                    <th>Work Order</th>
+                </tr>
+            </thead>
+            <tbody id="history-table">
+                <tr><td colspan="7" style="text-align:center">No history</td></tr>
+            </tbody>
+        </table>
+    </div>
 
-        // Initialize
-        window.onload = function() {
-            // Load history records
-            loadHistory();
-            renderHistory();
-            
-            // Bind file upload event
-            document.getElementById('excelFile').addEventListener('change', handleFileUpload);
-            
-            // Support drag and drop upload
-            const uploadArea = document.getElementById('uploadArea');
-            uploadArea.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                uploadArea.style.borderColor = '#165DFF';
-            });
-            uploadArea.addEventListener('dragleave', () => {
-                uploadArea.style.borderColor = '#ccc';
-            });
-            uploadArea.addEventListener('drop', (e) => {
-                e.preventDefault();
-                uploadArea.style.borderColor = '#ccc';
-                if (e.dataTransfer.files.length > 0) {
-                    handleFile(e.dataTransfer.files[0]);
-                }
-            });
+    <script>
+        // 全局变量
+        let excelData = [];     // 自动映射后的最终数据
+        let searchHistory = []; // 查询历史
+
+        // 列名匹配规则（支持中英文、变体）
+        const COLUMN_MATCH_RULES = {
+            meter: [
+                'meter', 'meternumber', 'meter number', 'meter id', 'meter_no', '电表号', '电表编号', '表号', '表编号'
+            ],
+            schemes: [
+                'schemes', 'scheme', 'plan', 'program', '方案', '计划', '套餐'
+            ],
+            customer: [
+                'customer', 'customer name', 'customername', '客户', '客户姓名', '客户名称'
+            ],
+            motherRef: [
+                'mother ref', 'motherref', 'mother reference', '母单', '母单号', 'mother id'
+            ],
+            workOrder: [
+                'work order', 'workorder', 'wo', '工单', '工单号'
+            ]
         };
 
-        // Handle file upload
-        function handleFileUpload(e) {
-            const file = e.target.files[0];
-            if (file) {
-                handleFile(file);
-            }
-        }
+        // 页面初始化
+        window.onload = function() {
+            loadHistory();
+            renderHistory();
+        };
 
-        // Core: Parse Excel file (simplified version)
-        function handleFile(file) {
-            // Reset state
-            excelData = [];
-            showAlert('uploadAlert', 'Reading file: ' + file.name, 'info');
-            
-            // Check file type
-            const ext = file.name.split('.').pop().toLowerCase();
-            if (ext !== 'xlsx' && ext !== 'xls') {
-                showAlert('uploadAlert', 'Please upload Excel file in .xlsx or .xls format', 'error');
-                updateDebug('File type error: ' + ext);
+        // --------------------------
+        // 1. Excel上传 + 全自动列映射
+        // --------------------------
+        function uploadExcel(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                updateDebug("No file selected");
                 return;
             }
 
-            // Read file (compatible with all browsers)
+            // 基础校验
+            const fileSize = file.size / 1024 / 1024;
+            if (fileSize > 20) {
+                showAlert('upload-alert', `Error: File too large (${fileSize.toFixed(1)}MB). Max 20MB`, 'error');
+                updateDebug(`File size exceed: ${fileSize.toFixed(1)}MB > 20MB`);
+                return;
+            }
+
+            const fileExt = file.name.split('.').pop().toLowerCase();
+            if (!['xlsx', 'xls'].includes(fileExt)) {
+                showAlert('upload-alert', `Error: Invalid file type (.${fileExt}). Only .xlsx/.xls allowed`, 'error');
+                updateDebug(`Invalid file type: .${fileExt}`);
+                return;
+            }
+
+            // 显示上传中
+            showAlert('upload-alert', `Processing file: ${file.name} (${fileSize.toFixed(1)}MB)`, 'info');
+            updateDebug(`
+                File Name: ${file.name}
+                File Size: ${fileSize.toFixed(1)}MB
+                File Type: ${file.type}
+                Extension: .${fileExt}
+                Start Time: ${new Date().toLocaleTimeString()}
+            `);
+
+            // 读取文件（兼容所有浏览器）
             const reader = new FileReader();
+            reader.readAsBinaryString(file);
+            
             reader.onload = function(e) {
                 try {
-                    // Core parsing logic (SheetJS simplest usage)
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array', raw: true });
-                    
-                    // Get first sheet
+                    // 解析Excel为原始数组
+                    const workbook = XLSX.read(e.target.result, { 
+                        type: 'binary',
+                        raw: true,
+                        cellDates: false
+                    });
+
                     const sheetName = workbook.SheetNames[0];
                     const worksheet = workbook.Sheets[sheetName];
-                    
-                    // Convert to JSON (auto recognize header)
-                    const jsonData = XLSX.utils.sheet_to_json(worksheet);
-                    
-                    // Debug information
+                    const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                    if (rawData.length < 2) {
+                        throw new Error(`No data found (only ${rawData.length} rows)`);
+                    }
+
+                    // 提取表头和数据行
+                    const headers = rawData[0].map(h => h ? cleanHeader(String(h)) : '');
+                    const dataRows = rawData.slice(1);
+
+                    // 全自动列映射（核心）
+                    const columnIndexes = getColumnIndexes(headers);
+                    excelData = mapAutoColumns(dataRows, columnIndexes);
+
+                    // 上传成功提示
+                    showAlert('upload-alert', `Success: Loaded ${excelData.length} valid records! Ready to search.`, 'success');
                     updateDebug(`
-                        File Name: ${file.name}
-                        File Size: ${(file.size/1024).toFixed(1)}KB
                         Sheet Name: ${sheetName}
-                        Data Rows: ${jsonData.length}
-                        Column Names: ${jsonData.length > 0 ? Object.keys(jsonData[0]).join(', ') : 'None'}
+                        Total Rows: ${rawData.length} (1 header + ${dataRows.length} data)
+                        Column Count: ${headers.length}
+                        Auto Mapping Result:
+                        - Meter Number: Column ${columnIndexes.meter + 1} (${rawData[0][columnIndexes.meter] || 'Unnamed'})
+                        - Schemes: Column ${columnIndexes.schemes + 1} (${rawData[0][columnIndexes.schemes] || 'Unnamed'})
+                        - Customer Name: Column ${columnIndexes.customer + 1} (${rawData[0][columnIndexes.customer] || 'Unnamed'})
+                        - Mother Ref: Column ${columnIndexes.motherRef + 1} (${rawData[0][columnIndexes.motherRef] || 'Unnamed'})
+                        - Work Order: Column ${columnIndexes.workOrder + 1} (${rawData[0][columnIndexes.workOrder] || 'Unnamed'})
+                        Valid Records: ${excelData.length}
+                        First 5 Meters: ${excelData.slice(0,5).map(item => item.meter).join(', ')}
                     `);
 
-                    // If no data
-                    if (jsonData.length === 0) {
-                        showAlert('uploadAlert', 'No data found in Excel file', 'error');
-                        return;
-                    }
-
-                    // Extended column matching logic
-                    let fieldKeys = {
-                        meter: null,
-                        scheme: null,
-                        customer: null,
-                        motherRef: null,
-                        workOrder: null
-                    };
-
-                    // Column name keywords for matching
-                    const fieldKeywords = {
-                        meter: ['meter', 'meter number', 'meternumber', 'meterid', 'meter_no'],
-                        scheme: ['scheme', 'schemes', 'plan', 'program'],
-                        customer: ['customer', 'customer name', 'customername', 'client', 'client name'],
-                        motherRef: ['mother ref', 'motherref', 'mother_reference', 'motherid'],
-                        workOrder: ['work order', 'workorder', 'work_order', 'wo', 'orderid']
-                    };
-
-                    // Iterate through all keys in first row to find matches
-                    const firstRowKeys = Object.keys(jsonData[0]);
-                    for (const key of firstRowKeys) {
-                        const lowerKey = key.toLowerCase().replace(/\s+/g, '');
-                        
-                        // Match each field
-                        Object.keys(fieldKeywords).forEach(field => {
-                            if (!fieldKeys[field]) {
-                                fieldKeywords[field].forEach(keyword => {
-                                    if (lowerKey.includes(keyword.replace(/\s+/g, ''))) {
-                                        fieldKeys[field] = key;
-                                    }
-                                });
-                            }
-                        });
-                    }
-
-                    // Check required fields (Meter Number is mandatory)
-                    if (!fieldKeys.meter) {
-                        showAlert('uploadAlert', `Meter Number column not found! Current columns: ${firstRowKeys.join(', ')}`, 'error');
-                        return;
-                    }
-
-                    // Extract valid data with extended fields
-                    excelData = jsonData.map(row => ({
-                        meter: row[fieldKeys.meter] ? String(row[fieldKeys.meter]).trim() : '',
-                        scheme: fieldKeys.scheme ? (row[fieldKeys.scheme] ? String(row[fieldKeys.scheme]).trim() : '') : '',
-                        customer: fieldKeys.customer ? (row[fieldKeys.customer] ? String(row[fieldKeys.customer]).trim() : '') : '',
-                        motherRef: fieldKeys.motherRef ? (row[fieldKeys.motherRef] ? String(row[fieldKeys.motherRef]).trim() : '') : '',
-                        workOrder: fieldKeys.workOrder ? (row[fieldKeys.workOrder] ? String(row[fieldKeys.workOrder]).trim() : '') : ''
-                    })).filter(row => row.meter); // Filter empty meter numbers
-
-                    // Show success message with field recognition status
-                    const recognizedFields = [];
-                    if (fieldKeys.meter) recognizedFields.push('Meter Number');
-                    if (fieldKeys.scheme) recognizedFields.push('Schemes');
-                    if (fieldKeys.customer) recognizedFields.push('Customer Name');
-                    if (fieldKeys.motherRef) recognizedFields.push('Mother Ref');
-                    if (fieldKeys.workOrder) recognizedFields.push('Work Order');
-
-                    showAlert('uploadAlert', `Upload successful! Parsed ${excelData.length} valid records. Recognized fields: ${recognizedFields.join(', ')}`, 'success');
-                    
                 } catch (error) {
-                    showAlert('uploadAlert', 'Parsing failed: ' + error.message, 'error');
-                    updateDebug('Parsing error: ' + error.stack);
+                    showAlert('upload-alert', `Error parsing Excel: ${error.message}`, 'error');
+                    updateDebug(`
+                        Parsing Error: ${error.message}
+                        Error Stack: ${error.stack || 'No stack'}
+                    `);
+                    excelData = [];
                 }
             };
 
-            reader.onerror = function() {
-                showAlert('uploadAlert', 'File reading failed, please check if the file is corrupted', 'error');
-                updateDebug('File reading error: ' + reader.error);
+            reader.onerror = function(error) {
+                showAlert('upload-alert', `Error reading file: ${error.message}`, 'error');
+                updateDebug(`File read error: ${error.message}`);
+                excelData = [];
             };
-
-            // Read file (key: use readAsArrayBuffer)
-            reader.readAsArrayBuffer(file);
         }
 
-        // Search meter number
+        // --------------------------
+        // 自动列映射辅助函数
+        // --------------------------
+        // 清洗表头（统一格式，方便匹配）
+        function cleanHeader(header) {
+            return header
+                .trim()
+                .toLowerCase()
+                .replace(/\s+/g, '')    // 移除所有空格
+                .replace(/[^a-z0-9\u4e00-\u9fa5]/g, '') // 移除特殊字符
+                .replace(/全角/g, '半角'); // 全角转半角（简化版）
+        }
+
+        // 获取各字段对应的列索引
+        function getColumnIndexes(headers) {
+            const indexes = {
+                meter: 0,
+                schemes: 1,
+                customer: 2,
+                motherRef: 3,
+                workOrder: 4
+            };
+
+            // 遍历表头匹配字段
+            headers.forEach((header, idx) => {
+                Object.keys(COLUMN_MATCH_RULES).forEach(field => {
+                    if (COLUMN_MATCH_RULES[field].some(rule => header.includes(cleanHeader(rule)))) {
+                        indexes[field] = idx;
+                    }
+                });
+            });
+
+            return indexes;
+        }
+
+        // 自动映射数据行
+        function mapAutoColumns(rows, indexes) {
+            const mappedData = [];
+
+            rows.forEach(row => {
+                // 只保留有电表编号的行
+                const meterValue = row[indexes.meter] ? String(row[indexes.meter]).trim().toUpperCase() : '';
+                if (!meterValue) return;
+
+                mappedData.push({
+                    meter: meterValue,
+                    schemes: row[indexes.schemes] ? String(row[indexes.schemes]).trim() : 'N/A',
+                    customer: row[indexes.customer] ? String(row[indexes.customer]).trim() : 'N/A',
+                    motherRef: row[indexes.motherRef] ? String(row[indexes.motherRef]).trim() : 'N/A',
+                    workOrder: row[indexes.workOrder] ? String(row[indexes.workOrder]).trim() : 'N/A'
+                });
+            });
+
+            return mappedData;
+        }
+
+        // --------------------------
+        // 2. 电表查询（精准匹配+调试）
+        // --------------------------
         function searchMeter() {
-            const meterInput = document.getElementById('meterInput').value.trim();
-            if (!meterInput) {
-                showAlert('searchAlert', 'Please enter Meter Number', 'error');
+            const input = document.getElementById('meter-input').value.trim().toUpperCase();
+            if (!input) {
+                showAlert('search-alert', 'Error: Please enter Meter Number', 'error');
                 return;
             }
+
             if (excelData.length === 0) {
-                showAlert('searchAlert', 'Please upload Excel file first', 'error');
+                showAlert('search-alert', 'Error: No Excel data loaded. Upload Excel first!', 'error');
                 return;
             }
 
-            // Fuzzy search (case insensitive)
-            const lowerInput = meterInput.toLowerCase();
-            const result = excelData.find(item => 
-                item.meter.toLowerCase().includes(lowerInput)
-            );
+            // 精准搜索（支持完全匹配/包含匹配）
+            const exactMatch = excelData.find(item => item.meter === input);
+            const fuzzyMatch = exactMatch || excelData.find(item => item.meter.includes(input));
 
-            // Show result
-            const resultArea = document.getElementById('resultArea');
-            resultArea.style.display = 'block';
-            
-            if (result) {
-                // Populate all fields in result
-                document.getElementById('resultMeter').textContent = result.meter || '-';
-                document.getElementById('resultScheme').textContent = result.scheme || '-';
-                document.getElementById('resultCustomer').textContent = result.customer || '-';
-                document.getElementById('resultMotherRef').textContent = result.motherRef || '-';
-                document.getElementById('resultWorkOrder').textContent = result.workOrder || '-';
+            // 显示结果和调试信息
+            const resultCard = document.getElementById('search-result');
+            resultCard.style.display = 'block';
+            const debugEl = document.getElementById('search-debug');
+
+            if (fuzzyMatch) {
+                // 显示所有关联信息
+                document.getElementById('res-meter').textContent = fuzzyMatch.meter;
+                document.getElementById('res-schemes').textContent = fuzzyMatch.schemes;
+                document.getElementById('res-customer').textContent = fuzzyMatch.customer;
+                document.getElementById('res-mother').textContent = fuzzyMatch.motherRef;
+                document.getElementById('res-work').textContent = fuzzyMatch.workOrder;
                 
-                showAlert('searchAlert', 'Search successful', 'success');
+                // 调试信息
+                debugEl.textContent = `Match type: ${exactMatch ? 'Exact' : 'Fuzzy'} | Total records: ${excelData.length}`;
+                showAlert('search-alert', 'Success: Record found', 'success');
                 
-                // Add to history
-                addToHistory(result);
+                // 添加到历史
+                addToHistory(fuzzyMatch);
             } else {
-                // Clear result fields when not found
-                document.getElementById('resultMeter').textContent = meterInput;
-                document.getElementById('resultScheme').textContent = 'Not found';
-                document.getElementById('resultCustomer').textContent = 'Not found';
-                document.getElementById('resultMotherRef').textContent = 'Not found';
-                document.getElementById('resultWorkOrder').textContent = 'Not found';
+                // 未找到
+                document.getElementById('res-meter').textContent = input;
+                document.getElementById('res-schemes').textContent = 'Not Found';
+                document.getElementById('res-customer').textContent = 'Not Found';
+                document.getElementById('res-mother').textContent = 'Not Found';
+                document.getElementById('res-work').textContent = 'Not Found';
                 
-                showAlert('searchAlert', 'Meter Number not found', 'error');
+                // 调试信息
+                debugEl.textContent = `No match found | Input: ${input} | Total records: ${excelData.length} | First 10 meters: ${excelData.slice(0,10).map(item => item.meter).join(', ')}`;
+                showAlert('search-alert', 'Error: Meter Number not found', 'error');
                 
-                // Add to history (not found)
+                // 添加到历史
                 addToHistory({
-                    meter: meterInput,
-                    scheme: 'Not found',
-                    customer: 'Not found',
-                    motherRef: 'Not found',
-                    workOrder: 'Not found'
+                    meter: input,
+                    schemes: 'Not Found',
+                    customer: 'Not Found',
+                    motherRef: 'Not Found',
+                    workOrder: 'Not Found'
                 });
             }
         }
 
-        // Add to history records
-        function addToHistory(data) {
-            const now = new Date();
-            const timeStr = now.toLocaleString('en-US');
-            
+        // --------------------------
+        // 3. 历史记录管理
+        // --------------------------
+        function addToHistory(record) {
             searchHistory.push({
-                time: timeStr,
-                meter: data.meter,
-                scheme: data.scheme,
-                customer: data.customer,
-                motherRef: data.motherRef,
-                workOrder: data.workOrder
+                time: new Date().toLocaleString(),
+                meter: record.meter,
+                schemes: record.schemes,
+                customer: record.customer,
+                motherRef: record.motherRef,
+                workOrder: record.workOrder
             });
-            
-            // Save to local storage
-            localStorage.setItem('meterSearchHistory', JSON.stringify(searchHistory));
-            // Render history
+            localStorage.setItem('meterHistory', JSON.stringify(searchHistory));
             renderHistory();
         }
 
-        // Load history records
         function loadHistory() {
-            const historyStr = localStorage.getItem('meterSearchHistory');
-            if (historyStr) {
-                searchHistory = JSON.parse(historyStr);
+            const saved = localStorage.getItem('meterHistory');
+            if (saved) {
+                try {
+                    searchHistory = JSON.parse(saved);
+                } catch (e) {
+                    searchHistory = [];
+                }
             }
         }
 
-        // Render history records table
         function renderHistory() {
-            const tableBody = document.getElementById('historyTable');
-            
+            const tbody = document.getElementById('history-table');
             if (searchHistory.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No history records</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center">No history</td></tr>';
                 return;
             }
 
-            let html = '';
-            searchHistory.forEach((item, index) => {
-                html += `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td>${item.time}</td>
-                        <td>${item.meter}</td>
-                        <td>${item.scheme || '-'}</td>
-                        <td>${item.customer || '-'}</td>
-                        <td>${item.motherRef || '-'}</td>
-                        <td>${item.workOrder || '-'}</td>
-                    </tr>
-                `;
-            });
-            tableBody.innerHTML = html;
+            tbody.innerHTML = searchHistory.map((item, i) => `
+                <tr>
+                    <td>${i+1}</td>
+                    <td>${item.time}</td>
+                    <td>${item.meter}</td>
+                    <td>${item.schemes}</td>
+                    <td>${item.customer}</td>
+                    <td>${item.motherRef}</td>
+                    <td>${item.workOrder}</td>
+                </tr>
+            `).join('');
         }
 
-        // Clear history records
         function clearHistory() {
-            if (confirm('Are you sure to clear all history records?')) {
+            if (confirm('Clear all history?')) {
                 searchHistory = [];
-                localStorage.removeItem('meterSearchHistory');
+                localStorage.removeItem('meterHistory');
                 renderHistory();
-                showAlert('searchAlert', 'History records cleared successfully', 'success');
+                showAlert('history-alert', 'History cleared', 'success');
             }
         }
 
-        // Export history records to Excel
         function exportHistory() {
             if (searchHistory.length === 0) {
-                showAlert('searchAlert', 'No history records to export', 'error');
+                showAlert('history-alert', 'No history to export', 'error');
                 return;
             }
 
-            // Prepare export data
-            const exportData = searchHistory.map((item, index) => ({
-                'Serial No.': index + 1,
+            const exportData = searchHistory.map((item, i) => ({
+                'ID': i+1,
                 'Search Time': item.time,
                 'Meter Number': item.meter,
-                'Schemes': item.scheme || '-',
-                'Customer Name': item.customer || '-',
-                'Mother Ref': item.motherRef || '-',
-                'Work Order': item.workOrder || '-'
+                'Schemes': item.schemes,
+                'Customer Name': item.customer,
+                'Mother Ref': item.motherRef,
+                'Work Order': item.workOrder
             }));
 
-            // Create Excel
-            const worksheet = XLSX.utils.json_to_sheet(exportData);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, 'Search History');
+            const ws = XLSX.utils.json_to_sheet(exportData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'History');
+            XLSX.writeFile(wb, `Meter_History_${new Date().toISOString().slice(0,10)}.xlsx`);
             
-            // Adjust column width for better readability
-            const wscols = [
-                {wch: 10},  // Serial No.
-                {wch: 25},  // Search Time
-                {wch: 20},  // Meter Number
-                {wch: 15},  // Schemes
-                {wch: 25},  // Customer Name
-                {wch: 20},  // Mother Ref
-                {wch: 20}   // Work Order
-            ];
-            worksheet['!cols'] = wscols;
-            
-            // Download file
-            const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-            XLSX.writeFile(workbook, `Meter_Search_History_${dateStr}.xlsx`);
-            showAlert('searchAlert', 'History records exported successfully', 'success');
+            showAlert('history-alert', 'History exported successfully', 'success');
         }
 
-        // Show alert message
+        // --------------------------
+        // 辅助函数
+        // --------------------------
         function showAlert(id, message, type) {
-            const alertEl = document.getElementById(id);
-            alertEl.textContent = message;
-            alertEl.style.display = 'block';
-            
-            // Set style
-            if (type === 'success') {
-                alertEl.className = 'alert alert-success';
-            } else if (type === 'error') {
-                alertEl.className = 'alert alert-error';
-            } else {
-                alertEl.className = 'alert alert-info';
-            }
-
-            // Hide after 3 seconds
-            setTimeout(() => {
-                alertEl.style.display = 'none';
-            }, 3000);
+            const el = document.getElementById(id);
+            el.textContent = message;
+            el.className = `alert alert-${type}`;
+            el.style.display = 'block';
+            setTimeout(() => el.style.display = 'none', 5000);
         }
 
-        // Update debug information
-        function updateDebug(info) {
-            document.getElementById('debugInfo').textContent = info.replace(/\n/g, ' ');
+        function updateDebug(message) {
+            document.getElementById('upload-debug').textContent = message.replace(/\n/g, '\n');
         }
     </script>
 </body>
